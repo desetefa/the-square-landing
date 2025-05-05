@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Open The Square App</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body { font-family: sans-serif; text-align: center; margin-top: 10vh; }
+    .spinner { margin: 40px auto; width: 40px; height: 40px; border: 4px solid #eee; border-top: 4px solid #007AFF; border-radius: 50%; animation: spin 1s linear infinite; }
+    @keyframes spin { 100% { transform: rotate(360deg); } }
+    .fallback { margin-top: 30px; }
+    a { color: #007AFF; font-weight: bold; }
+  </style>
+  <script>
+    function getQueryParam(name) {
+      const url = new URL(window.location.href);
+      return url.searchParams.get(name);
+    }
+
+    function openApp() {
+      var placeId = getQueryParam('placeId');
+      var token = getQueryParam('token');
+      if (!placeId || !token) {
+        document.getElementById('status').textContent = "Invalid QR code link.";
+        return;
+      }
+      // Deep link to your app (update 'the-square' to your actual scheme if needed)
+      var deepLink = `the-square://join-place?placeId=${encodeURIComponent(placeId)}&token=${encodeURIComponent(token)}`;
+      window.location = deepLink;
+
+      setTimeout(function() {
+        // If app not installed, redirect to the appropriate store or your website for now
+        var userAgent = navigator.userAgent || navigator.vendor || window.opera;
+        if (/android/i.test(userAgent)) {
+          window.location = 'https://theseenapp.com'; // <-- Update to Play Store link when available
+        } else if (/iPad|iPhone|iPod/.test(userAgent)) {
+          window.location = 'https://theseenapp.com'; // <-- Update to App Store link when available
+        } else {
+          document.getElementById('status').textContent = "Please scan this QR code with your phone.";
+        }
+      }, 1500);
+    }
+
+    window.onload = openApp;
+  </script>
+</head>
+<body>
+  <div class="spinner"></div>
+  <h2 id="status">Opening The Square App...</h2>
+  <div class="fallback">
+    <p>If nothing happens, <a id="manualLink" href="#">tap here</a> to open the app.</p>
+  </div>
+  <script>
+    // Set manual link for fallback
+    var placeId = (new URL(window.location.href)).searchParams.get('placeId');
+    var token = (new URL(window.location.href)).searchParams.get('token');
+    if (placeId && token) {
+      document.getElementById('manualLink').href = `the-square://join-place?placeId=${encodeURIComponent(placeId)}&token=${encodeURIComponent(token)}`;
+    }
+  </script>
+</body>
+</html>
