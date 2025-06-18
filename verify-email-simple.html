@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Verification - The Square</title>
+    <link rel="stylesheet" href="assets/css/the-square-styles.css">
+</head>
+<body>
+    <div class="container">
+        <div class="logo">TS</div>
+        <h1>The Square</h1>
+        <p class="subtitle">Email Verification</p>
+        
+        <div id="loading-state" class="status loading">
+            <div class="spinner pulse"></div>
+            <h2>Verifying Your Email</h2>
+            <p>Please wait while we verify your email address...</p>
+        </div>
+        
+        <div id="success-state" class="status success hidden">
+            <div class="icon success-icon">✓</div>
+            <h2>Email Verified Successfully!</h2>
+            <p>Your email address has been verified. You can now log in to your account in The Square app.</p>
+            <a href="#" class="button success" onclick="openApp()">Open The Square App</a>
+        </div>
+        
+        <div id="error-state" class="status error hidden">
+            <div class="icon error-icon">✗</div>
+            <h2>Verification Failed</h2>
+            <p id="error-message">The verification link is invalid or has expired.</p>
+            <div class="mt-lg">
+                <button class="button secondary" onclick="retry()">Try Again</button>
+                <a href="#" class="button success" onclick="openApp()">Open The Square App</a>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>© 2025 The Square. All rights reserved.</p>
+        </div>
+    </div>
+
+    <script>
+        // Configuration
+        const API_BASE_URL = 'http://192.168.1.227:3000'; // Your local backend for development
+        
+        // Get token from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const token = urlParams.get('token');
+        
+        // Auto-start verification
+        if (!token) {
+            showError('No verification token provided in the URL');
+        } else {
+            verifyEmail(token);
+        }
+        
+        async function verifyEmail(token) {
+            try {
+                console.log('Attempting to verify email with token:', token.substring(0, 10) + '...');
+                
+                const response = await fetch(`${API_BASE_URL}/api/auth/verify-email`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ token })
+                });
+                
+                const data = await response.json();
+                console.log('Verification response:', response.status, data);
+                
+                if (response.ok) {
+                    showSuccess();
+                } else {
+                    showError(data.message || 'Email verification failed');
+                }
+            } catch (error) {
+                console.error('Verification error:', error);
+                showError('Network error. Please check your connection and try again.');
+            }
+        }
+        
+        function showSuccess() {
+            document.getElementById('loading-state').classList.add('hidden');
+            document.getElementById('error-state').classList.add('hidden');
+            document.getElementById('success-state').classList.remove('hidden');
+        }
+        
+        function showError(message) {
+            document.getElementById('loading-state').classList.add('hidden');
+            document.getElementById('success-state').classList.add('hidden');
+            document.getElementById('error-message').textContent = message;
+            document.getElementById('error-state').classList.remove('hidden');
+        }
+        
+        function retry() {
+            if (token) {
+                document.getElementById('error-state').classList.add('hidden');
+                document.getElementById('loading-state').classList.remove('hidden');
+                verifyEmail(token);
+            }
+        }
+        
+        function openApp() {
+            // Try to open the app via deep link
+            const appScheme = 'thesquare://';
+            window.location.href = appScheme;
+            
+            // Fallback message
+            setTimeout(() => {
+                alert('Please open The Square app on your phone to continue.\n\nIf you don\'t have the app installed, download it from the App Store or Google Play.');
+            }, 1000);
+        }
+        
+        // Add entrance animation
+        window.addEventListener('load', () => {
+            document.querySelector('.container').style.opacity = '0';
+            document.querySelector('.container').style.transform = 'translateY(20px)';
+            
+            setTimeout(() => {
+                document.querySelector('.container').style.transition = 'all 0.6s ease';
+                document.querySelector('.container').style.opacity = '1';
+                document.querySelector('.container').style.transform = 'translateY(0)';
+            }, 100);
+        });
+    </script>
+</body>
+</html> 
